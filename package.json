@@ -7,5 +7,17 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "KoteiIto",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "babel-core": "^6.14.0",
+    "babel-polyfill": "^6.13.0",
+    "babel-preset-es2015": "^6.14.0",
+    "babel-preset-stage-0": "^6.5.0",
+    "config": "^1.21.0",
+    "koa": "^2.0.0-alpha.7",
+    "lodash": "^4.15.0",
+    "mysql": "^2.11.1",
+    "path": "^0.12.7",
+    "sequelize": "^3.24.3"
+  }
 }
