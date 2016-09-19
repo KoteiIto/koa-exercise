@@ -1,6 +1,6 @@
-import Table from '../table';
+import CacheTable from '../cachedTable';
 
-class User extends Table {
+class User extends CacheTable {
     static get table() {
         return 'user';
     }
@@ -8,30 +8,30 @@ class User extends Table {
     static get schema() {
         return {
             id: {
-                type: this._Sequelize.BIGINT(11) ,
+                type: this.Sequelize.BIGINT(20) ,
                 primaryKey: true,
                 autoIncrement: true,
             },
             name: {
-                type: this._Sequelize.STRING(10),
+                type: this.Sequelize.STRING(10),
                 allowNull: false,
             },
             money: {
-                type: this._Sequelize.BIGINT(11),
+                type: this.Sequelize.BIGINT(20),
                 defaultValue: 100,
             },
             energy: {
-                type: this._Sequelize.BIGINT(11),
+                type: this.Sequelize.BIGINT(20),
                 defaultValue: 30,
             },
             inquest: {
-                type: this._Sequelize.BOOLEAN,
+                type: this.Sequelize.BOOLEAN,
                 defaultValue: 0,
             }
         };
     }
 
-    rename(name) {
+    async rename(name) {
         this._model.name = name;
     }
 }

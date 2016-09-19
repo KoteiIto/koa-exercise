@@ -1,7 +1,7 @@
 import Sequelize from 'sequelize';
 import config from 'config';
 let c = config.get('sequelize');
-let sequelize = new Sequelize(c.db, c.user, c.password, c.options);
+let connection = new Sequelize(c.db, c.user, c.password, c.options);
 let definitionMap = new Map();
 
 /**
@@ -27,7 +27,7 @@ class Table {
     static get schema() {
         return {
             id: {
-                type: this._Sequelize.BIGINT(11) ,
+                type: this.Sequelize.BIGINT(11) ,
                 primaryKey: true,
                 autoIncrement: true,
             },
@@ -46,35 +46,58 @@ class Table {
     }
 
     /**
-     * Sequelize
-     * @private
+     * Sequelizeのモジュール
+     * @constructor
      */
-    static get _Sequelize() {
+    static get Sequelize() {
         return Sequelize;
     }
 
     /**
-     * sequelizeの定義オブジェクト
+     * sequelizeのモデル
      * @returns {Model}
-     * @private
      */
-    static get _sequelize() {
+    static get sequelize() {
         let definition = definitionMap.get(this.table);
         if (definition === undefined) {
-            definition = sequelize.define(this.table, this.schema);
+            definition = connection.define(this.table, this.schema);
             definitionMap.set(this.table, definition);
         }
         return definition;
     }
 
     /**
-     * 主キーからモデル毎のユニークな文字列を作成する
+     * 主キーからモデル毎のユニークな文字列を取得する
      * @returns {string}
      */
-    get implodeKey() {
-        return this.constructor.primaryKeys.map(key => {
-            return this._model[key];
+    get uniqueKey() {
+        return this.constructor.generateUniqueKey(this._model);
+    }
+
+    /**
+     * モデルからユニークな文字列を作成する
+     * @param model
+     * @returns {string}
+     */
+    static generateUniqueKey(model) {
+        return this.primaryKeys.map(key => {
+            let value = model[key];
+            if (value === undefined) throw new Error('主キー' + key + 'の値が指定されていない.');
+            return value;
         }).join(':');
+    }
+
+    /**
+     * 2つのモデルのフィールドをマージする
+     * 破壊的なメソッド
+     * @param baseModel
+     * @param mergeModel
+     */
+    static mergeModel(baseModel, mergeModel) {
+        let schema = this.schema;
+        Object.keys(schema).forEach(field => {
+            baseModel[field] = mergeModel[field];
+        });
     }
 
     /**
@@ -86,12 +109,11 @@ class Table {
     static async get(obj) {
         let options = {where: {}};
         for (let key of this.primaryKeys) {
-            if (obj[key] === undefined) {
-                throw new Error('主キー' + key + 'の値が指定されていない.');
-            }
+            if (obj[key] === undefined) throw new Error('主キー' + key + 'の値が指定されていない.');
             options.where[key] = obj[key];
         }
-        let model = await this._sequelize.findOne(options);
+        let model = await this.sequelize.findOne(options);
+        if (model === null) return null;
         return new this(model);
     }
 
@@ -101,7 +123,7 @@ class Table {
      * @returns {Array.<Table>}
      */
     static async find(options = {}) {
-        let modelList = await this._sequelize.findAll(options);
+        let modelList = await this.sequelize.findAll(options);
         return modelList.map(model => {
             return new this(model);
         })
@@ -110,10 +132,11 @@ class Table {
     /**
      * 1レコード検索
      * @param options
-     * @returns {Array.<Table>}
+     * @returns {Table}
      */
     static async findOne(options = {}) {
-        let model = await this._sequelize.findOne(options);
+        let model = await this.sequelize.findOne(options);
+        if (model === null) return null;
         return new this(model);
     }
 
@@ -123,29 +146,39 @@ class Table {
      * @returns {Table}
      */
     static async create(obj) {
-        let model = this._sequelize.build(obj);
+        let model = this.sequelize.build(obj);
         return new this(model);
     }
 
     /**
-     * モデルをDBに保存する
+     * フィールドの値を取得する
+     * @param field
      */
-    async save() {
-        await this._model.save();
+    get(field) {
+        return this._model[field];
+    }
+
+    /**
+     * モデルをDBに保存する
+     * @param options
+     */
+    async save(options = {}) {
+        await this._model.save(options);
     }
 
     /**
      * モデルのレコードを削除する
+     * @param options
      */
-    async destroy() {
-        await this._model.destroy();
+    async destroy(options = {}) {
+        await this._model.destroy(options);
     }
 
     /**
      * テーブルを定義でリセットする
      */
     static async migrate() {
-        await this._sequelize.sync({
+        await this.sequelize.sync({
             force: true
         });
     }

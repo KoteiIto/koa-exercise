@@ -26,28 +26,32 @@ app.use(async (ctx, next) => {
 });
 
 app.use(async (ctx, next) => {
-    let user = await User.create({name: 'foo'});
-    await user.save(ctx);
+    // let user = await User.create({id: 1, name: 'foo'}, ctx);
+    // await user.store(ctx);
     await next();
 });
 
 app.use(async (ctx, next) => {
-    let user = await User.findOne();
-    user.rename('hoge');
-    await user.save(ctx);
+    await User.filter({id: [300, 301, 302, 303, 250]}, ctx);
+    let user1= await User.get({id: 300}, ctx);
+    let user2 = await User.get({id: 301}, ctx);
+    await user1.remove(ctx);
+    user1 = await User.forge({id: 300, name: 'test'}, ctx);
+    await user1.rename('hogehoge');
+    await user2.store(ctx);
+    await User.sync(ctx);
     await next();
 });
 
 app.use(async (ctx, next) => {
-    await User.find({where: {id: [1,2,3,4]}});
     await next();
 });
 
-app.use(async (ctx, next) => {
-    let user = await User.findOne();
-    user.destroy();
-    await next();
-});
+// app.use(async (ctx, next) => {
+//     let user = await User.findOne();
+//     user.destroy();
+//     await next();
+// });
 
 app.use(async (ctx, next) => {
     let world = 'World';
