@@ -10,28 +10,17 @@ const TOKEN_LENGTH = 10;
  */
 class SimpleAuth {
     constructor() {
-        this[PRIVATE] = new Map(); //他のmoduleに公開しないためにSymbolをキーにする
+        this[PRIVATE] = new Map();
     }
 
-    /**
-     * ユーザIDに対応するトークンを返却する
-     * @param userId ユーザID
-     * @returns {string} トークン
-     */
-    async register(userId) {
+    async register({id}) {
         let token = Random.getString(TOKEN_LENGTH);
-        this[PRIVATE][userId] = token;
+        this[PRIVATE].set(token, id);
         return token;
     }
 
-    /**
-     * ユーザIDとTokenが一致しているかチェックする
-     * @param userId
-     * @param token
-     * @returns {boolean}
-     */
-    async check(userId, token) {
-        return this[PRIVATE][userId] === token;
+    async check({id, token}) {
+        return this[PRIVATE].get(token) === id;
     }
 }
 

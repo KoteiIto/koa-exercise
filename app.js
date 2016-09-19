@@ -21,20 +21,31 @@ app.use(async (ctx, next) => {
 });
 
 app.use(async (ctx, next) => {
-    await simpleAuth.register(10);
+    await simpleAuth.register({id: 10});
     await next();
 });
 
 app.use(async (ctx, next) => {
     let user = await User.create({name: 'foo'});
-    await user.save();
+    await user.save(ctx);
     await next();
 });
 
 app.use(async (ctx, next) => {
-    let user = await User.get({id: 1});
+    let user = await User.findOne();
     user.rename('hoge');
-    await user.save();
+    await user.save(ctx);
+    await next();
+});
+
+app.use(async (ctx, next) => {
+    await User.find({where: {id: [1,2,3,4]}});
+    await next();
+});
+
+app.use(async (ctx, next) => {
+    let user = await User.findOne();
+    user.destroy();
     await next();
 });
 
